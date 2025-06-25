@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4CAF50">
+    <title>Queen Rose Hiking Trail App</title>
+    <link rel="stylesheet" href="css/vendor/leaflet.css"/>
+    <!-- Add Litepicker CSS -->
+    <link rel="stylesheet" href="css/vendor/litepicker.min.css"/>
+    <link rel="stylesheet" href="css/vendor/splide.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/first-aid.css">
+    <link rel="manifest" href="manifest.json">
+    <!-- Add icons for PWA -->
+    <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
+    <!-- Add more icons as needed -->
+    <style>
+        /* Add style for the debug log output */
+        #debug-log-output {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 0.8em;
+        }
+        .log-error { color: red; font-weight: bold; }
+        .log-warn { color: orange; }
+        .log-info { color: blue; }
+        
+        /* Toggle switch styles */
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            -webkit-appearance: none;
+            background: #c6c6c6;
+            border-radius: 50px;
+            outline: none;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-left: 8px;
+            margin-right: 15px;
+        }
+        
+        .toggle-switch:checked {
+            background: #4CAF50;
+        }
+        
+        .toggle-switch:before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            background: white;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .toggle-switch:checked:before {
+            transform: translateX(26px);
+        }
+        
+        /* Download button styles */
+        #download-map-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        #download-map-btn:hover {
+            background: #1976D2;
+        }
+        
+        #download-map-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        /* Compact Controls Layout */
+        .controls-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .control-row label {
+            font-size: 14px;
+            font-weight: 500;
+            margin: 0;
+        }
+        
+        .control-row select {
+            flex: 1;
+            min-width: 200px;
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .btn-compact {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        #track-location-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        #track-location-btn:hover {
+            background: #45a049;
+        }
+        
+        #start-recording-btn {
+            background: #f44336;
+            color: white;
+        }
+        
+        #start-recording-btn:hover {
+            background: #da190b;
+        }
+        
+        #add-waypoint-btn-ui {
+            background: #ff9800;
+            color: white;
+        }
+        
+        #add-waypoint-btn-ui:hover {
+            background: #e68900;
+        }
+        
+        #download-map-btn {
+            background: #2196F3;
+            color: white;
+        }
+        
+        #download-map-btn:hover {
+            background: #1976D2;
+        }
+        
+        .toggle-label {
+            font-size: 13px;
+            font-weight: 500;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .toggle-switch-compact {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            -webkit-appearance: none;
+            background: #c6c6c6;
+            border-radius: 50px;
+            outline: none;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin: 0 8px;
+        }
+        
+        .toggle-switch-compact:checked {
+            background: #4CAF50;
+        }
+        
+        .toggle-switch-compact:before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            background: white;
+            transition: transform 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        .toggle-switch-compact:checked:before {
+            transform: translateX(20px);
+        }
+        
+        .track-up-container-compact {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 15px;
+        }
+        
+        .status-compact {
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+            min-width: 70px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .control-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            
+            .control-row:nth-child(2) {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .control-row:nth-child(3) {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            
+            .btn-compact {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .track-up-container-compact {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <!-- Add Logo and Slogan -->
+        <div class="header-left-content">
+            <div class="logo-container">
+                <img src="assets/queens_river_logo.png" alt="Queens River Adventure Camp Logo" id="app-logo">
+                <div class="slogan-text">
+                    <span class="slogan-line1">Your companion for adventures on</span>
+                    <span class="slogan-line2">Queen Rose Hiking Trail</span>
+                </div>
+            </div>
+        </div>
+        <button id="hamburger-menu" aria-label="Open navigation menu">&#9776;</button>
+        <nav id="slide-out-menu">
+            <button data-section="map">Map</button>
+            <button data-section="trails">Trails</button>
+            <button data-section="accommodation">Accommodation</button>
+            <button data-section="booking">Booking</button>
+            <button data-section="weather">Weather</button>
+            <button data-section="kml-library">KML Library</button>
+            <button data-section="my-kmls">KML Upload</button> <!-- New Button -->
+            <button data-section="my-tracks">My Tracks</button>
+            <button data-section="my-waypoints">My Waypoints</button>
+            <button data-section="essentials-checklist">Essentials Checklist</button>
+            <button data-section="first-aid-guide">First Aid Guide</button>
+            <button data-section="emergency-contacts">Emergency Contacts</button>
+            <button data-section="safety-information">Safety Information</button>
+            <button data-section="about-queens">About Queens</button>
+            <button data-section="directions">Directions</button>
+        </nav>
+    </header>
+
+    <main id="app-content">
+        <section id="map-section" class="app-section active">
+            <h2>Trail Map & GPS</h2>
+            <div class="controls-compact">
+                <!-- Row 1: Trail Selection -->
+                <div class="control-row">
+                    <label for="trail-select">Select Trail:</label>
+                    <select id="trail-select">
+                        <option value="none">-- No Trail Selected --</option>
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+                
+                <!-- Row 2: Main Action Buttons -->
+                <div class="control-row">
+                    <button id="track-location-btn" class="btn-compact">📍 Where Am I</button>
+                    <button id="start-recording-btn" class="btn-compact">🔴 Record</button>
+                    <button id="add-waypoint-btn-ui" class="btn-compact" title="Add Waypoint at Current Location">
+                        <img src="assets/hiker_waypoint_icon.png" alt="Add Waypoint" style="width:16px; height:16px; vertical-align: middle;"> Point
+                    </button>
+                    <button id="download-map-btn" class="btn-compact">💾 Download</button>
+                </div>
+                
+                <!-- Row 3: View Controls -->
+                <div class="control-row">
+                    <label for="satellite-toggle" class="toggle-label">🛰️ Satellite</label>
+                    <input type="checkbox" id="satellite-toggle" class="toggle-switch-compact">
+                    
+                    <div class="track-up-container-compact">
+                        <label class="toggle-label">🧭 Track Up</label>
+                        <input type="checkbox" id="track-up-toggle" class="toggle-switch-compact">
+                        <span id="track-up-status" class="status-compact">North Up</span>
+                    </div>
+                </div>
+                
+                <!-- Hidden recording controls -->
+                <button id="pause-recording-btn" style="display: none;">Pause Recording</button>
+                <button id="resume-recording-btn" style="display: none;">Resume Recording</button>
+                <button id="stop-recording-btn" style="display: none;">Stop Recording</button>
+                <span id="recording-status" style="margin-left: 10px;"></span>
+            </div>
+            <div id="map"></div>
+        </section>
+
+        <section id="my-kmls-section" class="app-section">
+            <h2>My KML Files</h2>
+            <p>Upload KML files from your device to view them on the map, even offline.</p>
+            <input type="file" id="kml-file-input" accept=".kml" style="margin-bottom: 10px;">
+            <div id="kml-upload-status" style="margin-top: 10px; margin-bottom: 20px;"></div>
+            <h3>Stored KML Files:</h3>
+            <div id="my-kml-files-list-container">
+                <p>No KML files stored yet.</p>
+            </div>
+        </section>
+
+        <section id="my-tracks-section" class="app-section">
+            <h2>My Recorded Tracks</h2>
+            <div id="recorded-tracks-list-container">
+                <!-- List of recorded tracks will be populated by JS -->
+                <p>No tracks recorded yet.</p>
+            </div>
+        </section>
+
+        <section id="my-waypoints-section" class="app-section">
+            <h2>My Saved Waypoints</h2>
+            <div id="saved-waypoints-list-container">
+                <!-- List of saved waypoints will be populated by JS -->
+                <p>No waypoints saved yet.</p>
+            </div>
+        </section>
+
+        <section id="trails-section" class="app-section">
+            <h2>Trail Information</h2>
+            <div id="trail-details">
+                <!-- Trail details will be populated by JS -->
+            </div>
+        </section>
+
+        <section id="booking-section" class="app-section">
+            <h2>Booking Request</h2>
+            <p>Please fill out the form below to request a booking. We will contact you to confirm availability and details.</p>
+            <form id="booking-request-form">
+                <label for="booking-name">Name:</label>
+                <input type="text" id="booking-name" required><br>
+
+                <label for="booking-email">Email:</label>
+                <input type="email" id="booking-email" required><br>
+
+                <label for="booking-phone">Phone Number:</label>
+                <input type="tel" id="booking-phone" required><br>
+
+                <label for="booking-date-range">Requested Dates:</label>
+                <input type="text" id="booking-date-range" required><br>
+
+                <label for="booking-hikers">Number of Hikers:</label>
+                <input type="number" id="booking-hikers" min="1" value="1" required><br>
+
+                <label for="booking-trail">Select Trail(s):</label>
+                <select id="booking-trail" required>
+                    <option value="" disabled selected>-- Select a Trail --</option>
+                    <!-- Trail options will be populated by JS -->
+                </select><br>
+
+                <label for="booking-message">Additional Message:</label>
+                <textarea id="booking-message" rows="4"></textarea><br>
+
+                <button type="submit">Submit Booking Request</button>
+            </form>
+            <div id="booking-confirmation" style="display: none; margin-top: 15px; color: green; font-weight: bold;">
+                Thank you! Your booking request has been submitted. We will contact you shortly.
+            </div>
+             <hr>
+             <p>Alternatively, you can contact us directly:</p>
+             <p>Thea and Willy Field - Managing Couple: +27 64 880 2175 (WhatsApp only)</p>
+             <p>Pieter and Jackie Visser - Owner Couple: +27 72 604 9600 (WhatsApp only)</p>
+             <p>Email: caretaker@queensriver.co.za</p>
+        </section>
+
+        <section id="weather-section" class="app-section">
+            <h2>7-Day Weather Forecast</h2>
+            <h3>Nelshoogte State Forest</h3>
+            <button id="refresh-weather-btn" style="margin-bottom: 10px;">Refresh Weather</button>
+            <div id="weather-last-updated" style="font-size: 0.9em; margin-bottom: 15px;">Fetching weather data...</div>
+            <div id="hiking-recommendation" style="display: none; padding: 10px; background-color: #eef; border-left: 5px solid #3498db; margin-bottom: 15px;">
+            </div>
+            <div id="weather-forecast-container" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <!-- Weather data will be populated by JS -->
+            </div>
+        </section>
+
+        <!-- Emergency Contacts Section -->
+        <section id="emergency-contacts-section" class="app-section">
+            <h2>Emergency Contacts</h2>
+            
+            <div class="first-aid-guide-section">
+                <div class="intro-text">
+                    <p>Important emergency contacts for the Queen Rose Hiking Trail area. Keep these numbers accessible during your hike.</p>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Queen Rose Hiking Trail Contacts</button>
+                    <div class="collapsible-content">
+                        <p><strong>Caretaker (Willy / Thea):</strong> 064 880 2175</p>
+                        <p><strong>Owners (Pieter / Jackie):</strong> 072 604 9600</p>
+                        <p class="emergency-note">Note: Cellphone signal may be limited on parts of the trail. Use these numbers when in range or in conjunction with other emergency services if they need local information.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">General Emergency Services (South Africa)</button>
+                    <div class="collapsible-content">
+                        <p><strong>National Emergency Number (from a mobile phone):</strong> 112</p>
+                        <p><strong>National Ambulance (Public):</strong> 10177 or 1022</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Ambulance Services (Barberton & Nelspruit Area)</button>
+                    <div class="collapsible-content">
+                        <p><strong>ER24 (Private):</strong> 084 124</p>
+                        <p><strong>Netcare 911 (Private):</strong> 082 911</p>
+                        <p><strong>Hi-Tech Nelspruit (Mbombela/Nelspruit Area):</strong> 082 0456 910</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Hospitals (Medical Emergencies)</button>
+                    <div class="collapsible-content">
+                        <p><strong>Barberton Hospital:</strong> 013 712 3011 (State Hospital)</p>
+                        <p><strong>Rob Ferreira Hospital:</strong> 013 741 6100 (State Hospital)</p>
+                        <p><strong>Mediclinic Nelspruit (Mbombela):</strong> 013 759 0500 (General), 013 759 0645 (Emergency)</p>
+                        <p><strong>Busamed Lowveld Private Hospital (Mbombela):</strong> 013 752 7576 (General & 24 Hour Emergency)</p>
+                        <p class="emergency-note">Note: Mediclinic and Busamed are private hospitals. Ensure hikers have necessary medical aid details if using these.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Snakebite and Poison Information</button>
+                    <div class="collapsible-content">
+                        <p><strong>Poison Information Helpline (24 hours, National):</strong> 0861 555 777</p>
+                        <p>This number is crucial for advice on bites, stings, and other poisonings. They can provide guidance to hikers or medical personnel.</p>
+                        <p><strong>African Snakebite Institute (Expert Advice):</strong> 082 494 2039 (Johan Marais)</p>
+                        <p class="emergency-note">This is a valuable resource for identifying snakes and getting specific treatment advice, but the primary contact for a medical emergency should be an ambulance or hospital.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Safety Information Section -->
+        <section id="safety-information-section" class="app-section">
+            <h2>Safety Information</h2>
+            <div class="emergency-container">
+                <div class="emergency-card">
+                    <h3>General Safety Guidelines</h3>
+                    <p>This guide provides essential information to help you stay safe while hiking the Queen Rose Trail. Please familiarize yourself with this information before starting your hike.</p>
+                </div>
+                
+                <div class="emergency-card">
+                    <h3>Wildlife Encounters</h3>
+                    <p>Encountering wildlife is a part of the hiking experience. By taking precautions and knowing how to react, you can minimize risks.</p>
+                    
+                    <p><strong>General Safety Around Wildlife:</strong></p>
+                    <p>Always maintain a respectful distance from all animals.</p>
+                    <p>Never feed wildlife. This can make them dependent on humans and may lead to aggressive behavior.</p>
+                    <p>Do not try to touch or provoke any animal.</p>
+                    <p>Be aware of your surroundings and listen for sounds that might indicate animals are nearby.</p>
+                    <p>Store all food securely to prevent attracting animals.</p>
+                    
+                    <p><strong>Snakes:</strong></p>
+                    <p>Mpumalanga is home to various snake species. While most are not dangerous, it's important to be cautious.</p>
+                    
+                    <p><strong>Prevention:</strong></p>
+                    <p>Stay strictly on marked trails.</p>
+                    <p>Wear sturdy closed hiking boots and long pants.</p>
+                    <p>Watch carefully where you step and where you place your hands, especially when moving over rocks or logs.</p>
+                    <p>Avoid walking through thick grass or dense undergrowth whenever possible.</p>
+                    <p>If staying overnight in tents, keep them zipped up and check your shoes and gear before use.</p>
+                    
+                    <p><strong>During an Encounter:</strong></p>
+                    <p>If you see a snake, stop and remain calm. Snakes usually only bite if they feel threatened or are surprised.</p>
+                    <p>Slowly back away from the snake, giving it plenty of space to move away. Snakes do not chase people.</p>
+                    <p>Do not attempt to handle, corner, or kill the snake.</p>
+                    
+                    <p><strong>If Bitten:</strong></p>
+                    <p>Stay calm. Panicking can make symptoms worse.</p>
+                    <p>Seek immediate medical attention. Contact the emergency number for the trail or local authorities without delay.</p>
+                    <p>Keep the bitten limb as still as possible, ideally below the level of the heart.</p>
+                    <p>Remove any tight jewelry or clothing near the bite area before swelling begins.</p>
+                    <p>Do NOT cut the wound or attempt to suck out the venom.</p>
+                    <p>Do NOT apply a tourniquet.</p>
+                    <p>Do NOT apply ice or heat to the bite.</p>
+                    <p>Try to remember the appearance of the snake (size, color, pattern, head shape) for identification, but only if it is safe to do so and does not delay seeking help.</p>
+                </div>
+                
+                <div class="emergency-card">
+                    <h3>Baboons</h3>
+                    <p>Baboons are intelligent and can be present in hiking areas. While generally not aggressive towards humans unless provoked or habituated to being fed, their behavior can be unpredictable.</p>
+                    
+                    <p><strong>Prevention:</strong></p>
+                    <p>Never feed baboons. This is the most common cause of problematic encounters.</p>
+                    <p>Keep all food and drinks secured and out of sight in your backpack.</p>
+                    <p>Avoid eating or displaying food when baboons are nearby.</p>
+                    
+                    <p><strong>During an Encounter:</strong></p>
+                    <p>Do not make direct eye contact, as this can be perceived as a challenge.</p>
+                    <p>Do not smile, as showing teeth can be interpreted as aggression.</p>
+                    <p>Do not run away, as this may trigger a chase instinct.</p>
+                    <p>Stand tall and confident. If the baboon approaches, back away slowly without turning your back completely.</p>
+                    <p>If a baboon grabs a bag or food item, it may be safer to let it go rather than risk injury trying to retrieve it.</p>
+                    <p>Be extra cautious around female baboons with infants.</p>
+                    <p>If a baboon displays aggressive signs (such as yawning to show teeth, slapping the ground, or mock charging), back away slowly and deliberately.</p>
+                </div>
+                
+                <div class="emergency-card">
+                    <h3>Basic Survival Tips</h3>
+                    <p>Being prepared for unexpected situations can make a significant difference.</p>
+                    
+                    <p><strong>Essential Gear:</strong></p>
+                    <p>Always carry a backpack with essential items, even on short day hikes. This includes:</p>
+                    <p>Sufficient water and extra food.</p>
+                    <p>A basic First Aid kit.</p>
+                    <p>A headlamp or flashlight with spare batteries.</p>
+                    <p>A knife or multi-tool.</p>
+                    <p>Fire-starting materials in a waterproof container.</p>
+                    <p>A whistle for signaling for help (the international distress signal is six short blasts).</p>
+                    <p>Extra clothing layers, including waterproof and warm layers, regardless of the forecast.</p>
+                    <p>Sun protection (sunscreen, hat).</p>
+                    <p>Navigation tools: a map and compass are essential backups, even if you are using GPS on your phone. Know how to use them.</p>
+                    <p>An emergency blanket or lightweight emergency shelter.</p>
+                    <p>A fully charged mobile phone (but be aware that signal may be limited). Consider a power bank.</p>
+                    
+                    <p><strong>If You Get Lost:</strong></p>
+                    <p>S.T.O.P. - Stop, Think, Observe, Plan. Stay calm.</p>
+                    <p>Stay together if you are in a group.</p>
+                    <p>Try to retrace your steps carefully if you are absolutely certain of where you last knew your location.</p>
+                    <p>If unsure, stay in one place. It's easier for search and rescue teams to find a stationary target than someone who is moving.</p>
+                    <p>Use your whistle or other signaling methods to attract attention.</p>
+                    <p>Find or create shelter if needed.</p>
+                    <p>Stay near the trail if possible, as searchers are likely to follow established paths.</p>
+                </div>
+                
+                <div class="emergency-card">
+                    <h3>Weather Hazards</h3>
+                    <p><strong>Hypothermia (Dangerously Low Body Temperature):</strong></p>
+                    <p>This can occur even in relatively mild temperatures, especially if you are wet or it is windy.</p>
+                    
+                    <p><strong>Prevention:</strong></p>
+                    <p>Dress in layers, stay dry by wearing waterproof clothing in rain, avoid prolonged exposure to wind, wear a warm hat as significant body heat is lost through the head.</p>
+                    
+                    <p><strong>Symptoms:</strong></p>
+                    <p>Shivering (may stop in severe cases), confusion, drowsiness, slurred speech, stumbling, loss of coordination, pale and cold skin.</p>
+                    
+                    <p><strong>Treatment:</strong></p>
+                    <p>Get to a sheltered area immediately. Remove any wet clothing and put on dry layers. Wrap them in blankets (including an emergency foil blanket). Share body heat with others. If conscious, provide warm, non-caffeinated, non-alcoholic drinks. Seek medical help.</p>
+                    
+                    <p><strong>Heat Exposure (Heat Exhaustion and Heatstroke):</strong></p>
+                    <p>High temperatures, especially when combined with humidity and physical exertion, can lead to heat illnesses.</p>
+                    
+                    <p><strong>Prevention:</strong></p>
+                    <p>Stay Hydrated: Drink water frequently throughout your hike, even before you feel thirsty.</p>
+                    <p>Wear light-colored, loose-fitting, breathable clothing.</p>
+                    <p>Wear a wide-brimmed hat and apply sunscreen regularly.</p>
+                    <p>Plan your hike to avoid the hottest parts of the day (typically late morning to afternoon).</p>
+                    <p>Take frequent breaks in shaded areas.</p>
+                    
+                    <p><strong>Recognizing Heat Exhaustion:</strong></p>
+                    <p>Heavy sweating, pale/clammy skin, muscle cramps, fatigue, weakness, dizziness, headache, nausea or vomiting, fast/weak pulse</p>
+                    
+                    <p><strong>Treating Heat Exhaustion:</strong></p>
+                    <p>Move to a cool, shaded location. Lie down and slightly elevate your legs. Drink cool water or an electrolyte drink. Loosen any tight clothing. Cool down by applying cool, wet cloths to your skin or fanning yourself. If symptoms do not improve within an hour or worsen, seek medical attention.</p>
+                    
+                    <p><strong>Recognizing Heatstroke (A Medical Emergency):</strong></p>
+                    <p>High body temperature (often 40°C or higher), hot/red/dry or sometimes damp skin, confusion, disorientation, slurred speech, nausea, vomiting, rapid/strong pulse, may lose consciousness, lack of sweating in some cases.</p>
+                    
+                    <p><strong>Treating Heatstroke (While Waiting for Help):</strong></p>
+                    <p>Call for emergency help immediately. Heatstroke is life-threatening. Move the person to the coolest possible area immediately. Begin cooling the person down urgently using any means available. Do NOT give fluids if the person is unconscious.</p>
+                    
+                    <p><strong>Thunderstorms and Lightning:</strong></p>
+                    <p>Thunderstorms are a serious risk on the trail.</p>
+                    
+                    <p><strong>Before Your Hike:</strong></p>
+                    <p>Always check the weather forecast before heading out. If thunderstorms are predicted, consider choosing a different day or a lower-altitude route.</p>
+                    
+                    <p><strong>During a Thunderstorm:</strong></p>
+                    <p>Listen for thunder. If you can hear thunder, you are at risk of being struck by lightning, even if it's not raining yet.</p>
+                    <p>Apply the 30/30 Rule: If the time between seeing a lightning flash and hearing the thunder is 30 seconds or less, seek safe shelter immediately. Wait at least 30 minutes after the last clap of thunder before leaving shelter.</p>
+                    <p>Avoid high ground (summits, ridges), isolated tall objects, open fields, shallow caves or rock overhangs.</p>
+                    <p>The safest places are typically in a valley or depression, in a dense forest of trees of similar height, or inside a substantial building or hard-top vehicle (if accessible).</p>
+                    <p>If caught in the open with no shelter: Crouch down low in a ball position with your feet and knees together. Minimize your contact with the ground. Do NOT lie flat.</p>
+                </div>
+                
+                <div class="emergency-card">
+                    <h3>Water Safety</h3>
+                    <p><strong>Flooded Rivers:</strong></p>
+                    <p>Do not attempt to cross rivers that are swollen or flowing rapidly due to rain. Wait for the water level to drop, which can happen quickly after rain stops. If the water level does not drop or the current is too strong, find an alternative route or turn back.</p>
+                    
+                    <p><strong>Fire Safety:</strong></p>
+                    <p>Respect all rules regarding fires on the trail. Only make fires in designated areas if permitted. Ensure fires are completely extinguished before leaving. Be aware of dry conditions where veld fires can easily start and spread quickly.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- New About Queens Section -->
+        <section id="about-queens-section" class="app-section">
+            <h2>About Queens River Adventure Camp</h2>
+            <p>Get lost in the mystic Nelshoogte Forest Reserve… Tucked away just 30 km from Barberton, the Queens River Adventure Camp plays host to the Queen Rose Hiking Trails. Easily considered as one of the most scenic trails in the region, several trails start at Queens base camp and leads hikers on an amazing route that traverses over river crossings, pools and wooden bridges, through pine and natural forests.</p>
+            <p>Bird life is in abundance and you have the opportunity to spot one of the 350 plus bird species. Although some degree of fitness is needed to navigate the forest terrain, the tranquillity and sublime relaxation experienced is therapeutic. Your body can do anything, it’s the mind that needs convincing…</p> 
+            <p>Feel completely safe at Queen Rose, all our hikers are issued with a two-way radio that is monitored at Queens Base Camp. The beauty of our trails is that anyone can do it, as long as you have a reasonable level of fitness and a pair of sturdy hiking boots. Some of the climbs may leave you a little short of breath but the views from the top will certainly take your breath away!</p>
+            <p>Our hiking trails have it all, the spectacular views, incredible wildlife, entertaining river crossings and perfectly placed natural splash pools and waterfalls. What’s more, anyone can enjoy it from babies in backpacks to senior citizens. Yet the real beauty of the trails is that it enables you to slip away from the stresses of modern-day life and reconnect with nature.</p>
+            <p>If you should experience any medical issues a vehicle will be dispatched to pick you up where possible. If you are unfit and do not feel capable to finish the trail, don’t stress for a small fee we will send a vehicle to collect you. Slack-packing is available on all trails.</p>
+        </section>
+
+
+
+        <section id="accommodation-section" class="app-section">
+            <h2>Accommodation Options</h2>
+            <div class="accommodation-item">
+                <h3>Queens Base Camp – Hikers House</h3>
+                <section class="splide accommodation-gallery" aria-label="Hikers House Photos">
+                  <div class="splide__track">
+                    <ul class="splide__list">
+                      <li class="splide__slide"><img src="img/accommodation/hikers_house_main_1.jpeg" alt="Hikers House detail 1"></li>
+                      <li class="splide__slide"><img src="img/accommodation/hikers_house_main_2.jpeg" alt="Hikers House detail 2"></li>
+                      <li class="splide__slide"><img src="img/accommodation/hikers_house_main_3.jpeg" alt="Hikers House detail 3"></li>
+                      <li class="splide__slide"><img src="img/accommodation/hikers_house_main_4.jpeg" alt="Hikers House detail 4"></li>
+                      <li class="splide__slide"><img src="img/accommodation/hikers_house_main_5.jpeg" alt="Hikers House detail 5"></li>
+                      <li class="splide__slide"><img src="img/accommodation/Hikers-House-6.jpg" alt="Hikers House detail 6"></li>
+                    </ul>
+                  </div>
+                </section>
+                <p>A modern house, five stars in a hiking house standard. A fully self-catering kitchen with a stove, microwave, two fridges, all pots and pans and crockery. All lighting, geysers and appliances are electrical. 6 rooms with comfortable beds fitted with mattress protectors and fitted sheets, bring your own bedding, 3 toilets and 3 showers, a dining hall table, access to a wood fired braai. Please bring your own food, toiletries and towels. Sleeps 20.</p>
+            </div>
+            <div class="accommodation-item">
+                <h3>Queens Base Camp – Plaashuis</h3>
+                 <section class="splide accommodation-gallery" aria-label="Plaashuis Photos">
+                   <div class="splide__track">
+                     <ul class="splide__list">
+                       <li class="splide__slide"><img src="img/accommodation/plaashuis_main_1.jpeg" alt="Plaashuis detail 1"></li>
+                       <li class="splide__slide"><img src="img/accommodation/plaashuis_main_2.jpeg" alt="Plaashuis detail 2"></li>
+                       <li class="splide__slide"><img src="img/accommodation/plaashuis_main_3.jpeg" alt="Plaashuis detail 3"></li>
+                       <li class="splide__slide"><img src="img/accommodation/plaashuis_main_4.jpeg" alt="Plaashuis detail 4"></li>
+                       <li class="splide__slide"><img src="img/accommodation/plaashuis_main_5.jpeg" alt="Plaashuis detail 5"></li>
+                       <li class="splide__slide"><img src="img/accommodation/plaashuis_main_6.jpeg" alt="Plaashuis detail 6"></li>
+                     </ul>
+                   </div>
+                 </section>
+                <p>An old farm house dating back from the mid 1900’s. A very welcoming old house that still has wooden floors. Basic but clean and comfortable. A fully self-catering kitchen with a stove, microwave, fridge, all pots and pans and crockery. All lighting, geysers and appliances are electrical. 4 rooms with comfortable beds fitted with mattress protectors and fitted sheets, bring your own bedding, 2 toilets and 2 showers, two dining hall tables, access to a wood fired braai. Please bring your own food, toiletries and towels. Sleeps 14.</p>
+            </div>
+            <div class="accommodation-item">
+                <h3>Queens Base Camp – Dormitories</h3>
+                 <section class="splide accommodation-gallery" aria-label="Dormitories Photos">
+                   <div class="splide__track">
+                     <ul class="splide__list">
+                       <li class="splide__slide"><img src="img/accommodation/dormitories_main_1.jpeg" alt="Dormitories detail 1"></li>
+                       <li class="splide__slide"><img src="img/accommodation/dormitories_main_2.jpeg" alt="Dormitories detail 2"></li>
+                       <li class="splide__slide"><img src="img/accommodation/dormitories_main_3.jpeg" alt="Dormitories detail 3"></li>
+                       <li class="splide__slide"><img src="img/accommodation/dormitories_main_4.jpeg" alt="Dormitories detail 4"></li>
+                       <li class="splide__slide"><img src="img/accommodation/dormitories_main_5.jpeg" alt="Dormitories detail 5"></li>
+                       <li class="splide__slide"><img src="img/accommodation/dormitories_main_6.jpeg" alt="Dormitories detail 6"></li>
+                       <li class="splide__slide"><img src="img/accommodation/dormitories_main_7.jpeg" alt="Dormitories detail 7"></li>
+                       <li class="splide__slide"><img src="img/accommodation/dormitories_main_8.jpeg" alt="Dormitories detail 8"></li>
+                     </ul>
+                   </div>
+                 </section>
+                <p>A cheaper option for those who are on a budget. 4 x dorms (Bush Buck – 7 rooms, Crown Eagle – 6 rooms, Civit Cat – 7 rooms, Leopard – 7 rooms). Each dorm has its own ablution block opposite the dorms and not attached with 4 x toilets, 4 x showers and 4 x wash basins and electrical geysers. Fully revamped dorms with steel bunker beds and matrasses with fitted sheets. Lighting and plug points are electrical. Bring your own bedding. Access to wood fired braai. Please bring your own food, toiletries and towels. Sleeps 50 each.</p>
+            </div>
+            <div class="accommodation-item">
+                <h3>Matumi Log Cabin</h3>
+                 <section class="splide accommodation-gallery" aria-label="Matumi Bush Camp Photos">
+                   <div class="splide__track">
+                     <ul class="splide__list">
+                       <li class="splide__slide"><img src="img/accommodation/Matumi-1.jpeg" alt="Matumi Bush Camp detail 1"></li>
+                       <li class="splide__slide"><img src="img/accommodation/Matumi-2.jpg" alt="Matumi Bush Camp detail 2"></li>
+                       <li class="splide__slide"><img src="img/accommodation/Matumi-3.jpg" alt="Matumi Bush Camp detail 3"></li>
+                       <li class="splide__slide"><img src="img/accommodation/Matumi-4.jpeg" alt="Matumi Bush Camp detail 4"></li>
+                       <li class="splide__slide"><img src="img/accommodation/Matumi-5.jpg" alt="Matumi Bush Camp detail 5"></li>
+                       <li class="splide__slide"><img src="img/accommodation/Matumi-Bush-Camp-Cabin-8.jpg" alt="Matumi Bush Camp detail 6"></li>
+                     </ul>
+                   </div>
+                 </section>
+                <p>The New Matumi Lane Cabin is the place to stay. The Matumi Lane Cabin looks like it has been plucked straight from the pages of a fairy-tale. The hut is built on stilts with 2 outside ablution facilities with solar lighting, a gas geyser, a flush toilet and a wash basin each with a great view of the indigenous bush while utilising the ablution facilities. There is solar electricity for lighting and cell phone / camera charging in the cabin rooms. 4 x rooms with 2 x bunkers beds and 3 x single beds (able to sleep 7 people per room) with mattresses and fitted sheets, bring your own bedding. Each room has crockery and cutlery for the 7 occupants. A gas two burner and a kettle, pots and pans under the cabin. A braai area in the Boma in the next-door Matumi Lane Bush Camp. Please bring your own food, toiletries and towels.</p>
+            </div>
+            <div class="accommodation-item">
+                <h3>Houthuis</h3>
+                 <section class="splide accommodation-gallery" aria-label="Houthuis Photos">
+                   <div class="splide__track">
+                     <ul class="splide__list">
+                       <li class="splide__slide"><img src="img/accommodation/Houthuis-1.jpeg" alt="Houthuis detail 1"></li>
+                       <li class="splide__slide"><img src="img/accommodation/Houthuis-2.jpg" alt="Houthuis detail 2"></li>
+                       <li class="splide__slide"><img src="img/accommodation/Houthuis-3.jpg" alt="Houthuis detail 3"></li>
+                       <li class="splide__slide"><img src="img/accommodation/Houthuis-4.jpg" alt="Houthuis detail 4"></li>
+                       <li class="splide__slide"><img src="img/accommodation/Houthuis-5.jpg" alt="Houthuis detail 5"></li>
+                     </ul>
+                   </div>
+                 </section>
+                <p>Nelshoogte Forestry Station – Houthuis. An old-style forestry cabin that has been fully revamped inside with electricity. Fully self-catering kitchen with a gas stove, fridge, pots and pans and crockery. 4 rooms with single beds and mattresses with fitted sheets, bring your own bedding, 1 toilet, 1 shower and 1 bath with a gas geyser. A wood fired braai with a big outside area/lawn. Please bring your own food, toiletries and towels. Sleeps 14.</p>
+            </div>
+            <div class="accommodation-item">
+                <h3>Matumi Bush Camp</h3>
+                 <section class="splide accommodation-gallery" aria-label="Matumi Bush Camp Photos">
+                   <div class="splide__track">
+                     <ul class="splide__list">
+                       <li class="splide__slide"><img src="img/accommodation/1.jpg" alt="Matumi Bush Camp detail 1"></li>
+                       <li class="splide__slide"><img src="img/accommodation/2.jpg" alt="Matumi Bush Camp detail 2"></li>
+                       <li class="splide__slide"><img src="img/accommodation/3.jpg" alt="Matumi Bush Camp detail 3"></li>
+                       <li class="splide__slide"><img src="img/accommodation/4.jpg" alt="Matumi Bush Camp detail 4"></li>
+                     </ul>
+                   </div>
+                 </section>
+                <p>Nestled in the Queens River Nature Reserve, a couple of meters away from the Queens River. Lots of shade, a big boma for a fire at night , a single flush toilet and a gas shower available. Can be accessed with offroad caravans. the road could be challenging when wet</p>
+            </div>
+        </section>
+
+        <section id="directions-section" class="app-section">
+            <h2>Directions to Queens River Adventure Camp</h2>
+            <img src="img/directions_banner.jpg" alt="Directions to Queens River Adventure Camp" style="width: 100%; max-width: 800px; display: block; margin: 10px auto;">
+            <p><strong>GPS Coordinates: S 25° 47.444, E 030° 47.547</strong></p>
+            <p><strong>From Johannesburg / Pretoria via N4</strong></p>
+            <ol>
+                <li>Continue on the N4.</li>
+                <li>Take the first Carolina turnoff.</li>
+                <li>Continue through Carolina towards Badplaas.</li>
+                <li>Continue through Badplaas.</li>
+                <li>Continue approximately 33km to the White Walls (Entrance Picture above).</li>
+                <li>Turn right between the white walls.</li>
+                <li>Drive along the tar road for approximately 4.7km.</li>
+                <li>Turn right onto the dirt road and follow the directional signs to Queens River Adventure Camp.</li>
+            </ol>
+            <p><strong>From Nelspruit via R40</strong></p>
+            <ol>
+                <li>Continue on the R40.</li>
+                <li>Turn right onto R38 (Towards Carolina).</li>
+                <li>Continue approximately 25km to the White Walls (Entrance Picture above).</li>
+                <li>Turn left between the white walls.</li>
+                <li>Drive along the tar road for approximately 4.7km.</li>
+                <li>Turn right onto the dirt road and follow the directional signs to Queens River Adventure Camp.</li>
+            </ol>
+            <p><strong>Directions to Houthuis</strong></p>
+            <ol>
+                <li>After passing through the White Walls (Entrance Picture above).</li>
+                <li>Drive along the tar road until reaching a boom gate at the Safcol Offices.</li>
+                <li>Meet the Queens River Adventure Camp Caretaker at the boom gate.</li>
+            </ol>
+            <p><strong>TRAVEL SAFE!</strong></p>
+
+        </section>
+
+        <section id="kml-library-section" class="app-section">
+            <h2>KML Trail Library</h2>
+            <p>Select a trail from the official library to view on the map.</p>
+            <ul id="kml-file-list">
+                <!-- KML files will be listed here by JS -->
+            </ul>
+        </section>
+
+        <!-- Debug Log Section -->
+        <section id="debug-log-section" class="app-section" style="display:none;"> <!-- Hidden by default -->
+            <h2>Debug Log</h2>
+            <button id="clear-debug-log-btn">Clear Log</button>
+            <div id="debug-log-output"></div>
+        </section>
+
+        <section id="essentials-checklist-section" class="app-section">
+            <h2>Essential Checklist</h2>
+            <div class="checklist-intro">
+                <p>This checklist is a guide. Adjust items based on your specific route (day hike vs. multi-day), weather forecast, and personal needs.</p>
+            </div>
+            
+            <div class="checklist-section">
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Navigation</button>
+                    <div class="collapsible-content">
+                        <p><strong>GPS Device/App:</strong> Optional but useful, our routes are properly marked. Ensure offline maps are downloaded and battery is full (carry a power bank).</p>
+                        <p><strong>Route Description:</strong> Printout or digital copy of the trail description/notes.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Hydration</button>
+                    <div class="collapsible-content">
+                        <p><strong>Water Bottles/Hydration Reservoir:</strong> Carry sufficient water. General rule: 1-2 litres per person per half-day of hiking, but this varies greatly with heat and effort.</p>
+                        <p><strong>Water Purification:</strong> Filter, purification tablets, or drops. Know the location of reliable water sources on your route if planning to refill.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Food & Nutrition</button>
+                    <div class="collapsible-content">
+                        <p><strong>Trail Snacks:</strong> High-energy, easy-to-eat snacks (nuts, dried fruit, energy bars, jerky). Pack more than you think you'll need.</p>
+                        <p><strong>Lunch (for longer hikes):</strong> Sandwiches, wraps, or other non-perishable options.</p>
+                        <p><strong>Meals (for multi-day hikes):</strong> Lightweight, easy-to-prepare meals (dehydrated meals are a good option).</p>
+                        <p><strong>Extra Day's Food:</strong> In case of delays.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Clothing & Footwear</button>
+                    <div class="collapsible-content">
+                        <p><strong>Hiking Boots/Shoes:</strong> Sturdy, broken-in footwear suitable for varied terrain, including potential wet areas. Ankle support is recommended for steeper sections.</p>
+                        <p><strong>Hiking Socks:</strong> Moisture-wicking synthetic or wool socks (bring spares). Consider a liner sock to prevent blisters.</p>
+                        <p><strong>Moisture-Wicking Base Layers:</strong> (Synthetic or wool) to keep sweat away from your skin.</p>
+                        <p><strong>Mid-Layer:</strong> Fleece or insulated jacket for warmth.</p>
+                        <p><strong>Outer Layer:</strong> Waterproof and windproof jacket (even in good weather, conditions can change).</p>
+                        <p><strong>Hiking Pants/Shorts:</strong> Quick-drying material. Zip-off pants offer versatility.</p>
+                        <p><strong>Sun Hat/Cap:</strong> Wide-brimmed hat offers best protection.</p>
+                        <p><strong>Warm Hat/Beanie:</strong> Evenings can be cool, especially at higher elevations.</p>
+                        <p><strong>Gloves:</strong> If cooler weather is expected.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Sun Protection</button>
+                    <div class="collapsible-content">
+                        <p><strong>Sunscreen:</strong> High SPF, apply generously and reapply throughout the day, especially after river crossings.</p>
+                        <p><strong>Lip Balm with SPF.</strong></p>
+                        <p><strong>Sunglasses:</strong> With UV protection.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Safety & First Aid</button>
+                    <div class="collapsible-content">
+                        <p><strong>Basic First-Aid Kit:</strong> Include plasters, antiseptic wipes, pain relievers, blister treatment (moleskin or Compeed), bandages, medical tape, and any personal medications.</p>
+                        <p><strong>Emergency Whistle:</strong> For signaling for help.</p>
+                        <p><strong>Headlamp/Torch:</strong> With extra batteries (essential, even for day hikes, in case you're delayed).</p>
+                        <p><strong>Fire Starter:</strong> Waterproof matches or lighter and tinder (for emergency only).</p>
+                        <p><strong>Knife or Multi-tool.</strong></p>
+                        <p><strong>Emergency Shelter:</strong> Lightweight space blanket or emergency bivy (optional but recommended).</p>
+                        <p><strong>Personal ID and Emergency Contacts:</strong> Keep on your person. Inform someone of your route and expected return time.</p>
+                        <p><strong>Two-Way Radio:</strong> Queen Rose trail provides these and monitors them – understand how to use yours.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Tools & Repair Items</button>
+                    <div class="collapsible-content">
+                        <p><strong>Small Repair Kit:</strong> Duct tape, safety pins, cordage.</p>
+                        <p><strong>Trekking Poles:</strong> Optional, but helpful for stability on varied terrain and steep descents (like Roland's Staircase).</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Hygiene & Sanitation</button>
+                    <div class="collapsible-content">
+                        <p><strong>Hand Sanitizer.</strong></p>
+                        <p><strong>Toilet Paper:</strong> In a waterproof bag.</p>
+                        <p><strong>Small Trowel:</strong> To bury human waste away from water sources.</p>
+                        <p><strong>Biodegradable Soap:</strong> For washing hands or dishes (use sparingly and away from water).</p>
+                        <p><strong>Sealable Bag:</strong> To pack out all waste, including toilet paper.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Miscellaneous Essentials</button>
+                    <div class="collapsible-content">
+                        <p><strong>Cash:</strong> For emergencies or unexpected needs.</p>
+                        <p><strong>Camera:</strong> For capturing memories (optional).</p>
+                        <p><strong>Notebook and Pen:</strong> For journaling or notes.</p>
+                        <p><strong>Permits/Reservations:</strong> If required for your specific trail.</p>
+                        <p><strong>Backpack:</strong> Appropriate size for the length of your hike.</p>
+                        <p><strong>Backpack Rain Cover or Waterproof Liner.</strong></p>
+                        <p><strong>Power Bank/Portable Charger:</strong> For electronic devices.</p>
+                        <p><strong>Trash Bag:</strong> Pack out everything you pack in.</p>
+                        <p><strong>Insect Repellent:</strong> Especially during warmer months.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="checklist-footer">Being well-prepared ensures a safer and more enjoyable experience on the beautiful Queen Rose hiking trail!</p>
+        </section>
+        <section id="first-aid-guide-section" class="app-section">
+            <h2>Basic Hiking First Aid Guide (Queen Rose Trail)</h2>
+            
+            <div class="first-aid-intro">
+                <p>This guide is for basic situations. For serious injuries or emergencies, use your provided two-way radio or phone (if signal is available) to contact Queen Rose Base Camp or emergency services immediately. Knowing basic first aid can help manage a situation until professional help arrives.</p>
+            </div>
+
+            <div class="first-aid-section">
+                <h3>1. Assessing the Situation:</h3>
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Assessing the Situation</button>
+                    <div class="collapsible-content">
+                        <p><strong>STOP:</strong> Before rushing in, stop and assess the scene for any dangers to yourself or the injured person (e.g., unstable ground, wildlife).</p>
+                        <p><strong>Assess the Person:</strong> Check for consciousness, breathing, and severe bleeding. Ask them what happened and where they feel pain.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Emergency Response on Queen Rose Hiking Trail</button>
+                    <div class="collapsible-content">
+                        <ul>
+                            <li><strong>Stay Calm:</strong> Panic makes things worse.</li>
+                            <li><strong>Assess the Situation:</strong> What happened? Where are you? Who is injured and how severely?</li>
+                            <li><strong>Use the Radio:</strong> Activate your provided two-way radio to contact Queen Rose Base Camp. Clearly state your location (use trail markers or landmarks), the nature of the emergency, and the condition of the injured person. Follow their instructions.</li>
+                            <li><strong>Use Your Phone:</strong> If you have signal and cannot reach Base Camp via radio, try calling emergency services (112 or other relevant local numbers you should have pre-programmed). Provide your location details.</li>
+                            <li><strong>Signal for Help:</strong> If you cannot communicate electronically, use a whistle (six short blasts, repeated) or mirror/shiny object to signal aircraft.</li>
+                            <li><strong>Stay Put (if necessary):</strong> If the injured person cannot move, stay with them. Send for help if there are enough people in your group (ideally send two people, leaving one with the injured, and mark the location on a map for them).</li>
+                        </ul>
+                        <p><strong>Remember:</strong> Prevention is key. Hike within your abilities, wear appropriate gear, stay hydrated and fuelled, and be aware of your surroundings.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="first-aid-section">
+                <h3>2. Common Hiking Issues & Basic Care:</h3>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Blisters</button>
+                    <div class="collapsible-content">
+                        <p><strong>Prevention:</strong> Wear well-fitting, broken-in hiking boots and moisture-wicking socks. Address "hot spots" (areas of friction) immediately by covering them with medical tape or moleskin.</p>
+                        <p><strong>Treatment:</strong> For intact blisters, clean the area and cover with a blister plaster or moleskin donut to reduce pressure. If a blister is large, painful, or likely to pop on its own, you can drain it: clean the area and a needle with antiseptic, carefully pierce the edge, gently press out the fluid, and cover with a sterile dressing, keeping the 'roof' of the blister intact if possible. Monitor for infection.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Cuts and Scrapes</button>
+                    <div class="collapsible-content">
+                        <p><strong>Treatment:</strong> Clean the wound with antiseptic wipes or clean water. Apply pressure with a clean cloth or gauze to stop bleeding. Once bleeding stops, apply antiseptic ointment and cover with a plaster or sterile dressing.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Sprains and Strains</button>
+                    <div class="collapsible-content">
+                        <p><strong>Treatment (RICE):</strong></p>
+                        <ul>
+                            <li><strong>Rest:</strong> Stop activity and avoid putting weight on the injured limb.</li>
+                            <li><strong>Ice:</strong> Apply a cold pack (or a cloth soaked in cold stream water) to the injured area for 15-20 minutes at a time to reduce swelling and pain.</li>
+                            <li><strong>Compression:</strong> Gently wrap the injured area with an elastic bandage to help reduce swelling. Ensure it's not too tight (check for numbness, tingling, or increased pain).</li>
+                            <li><strong>Elevation:</strong> Keep the injured limb raised above heart level if possible.</li>
+                        </ul>
+                        <p>If severe pain, inability to bear weight, or deformity is present, suspect a fracture and seek immediate medical help. Use trekking poles or sticks to create a makeshift splint if necessary to immobilize the limb.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Insect Bites and Stings</button>
+                    <div class="collapsible-content">
+                        <p><strong>Treatment:</strong> If a stinger is present (like from a bee), scrape it out carefully with a fingernail or credit card edge (avoid squeezing). Clean the area. Apply an antihistamine cream to reduce itching and swelling. Monitor for signs of a severe allergic reaction (difficulty breathing, swelling of face/throat, rash spreading rapidly) and use an EpiPen if the person has one and you are trained, then seek immediate emergency help.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">CPR</button>
+                    <div class="collapsible-content">
+                        <h4>Emergency Response - Quick Guide</h4>
+                        <p>This is a basic guide. For full training, take an accredited First Aid and CPR course.</p>
+                        <p>This is based on current guidelines for lay rescuers performing CPR on adults.</p>
+                        <p>Remember: Any attempt at CPR is better than no attempt. Hands-only CPR is recommended for untrained bystanders.</p>
+
+                        <h4>1. Check for Danger:</h4>
+                        <p>Before approaching, ensure the scene is safe for you and the person.</p>
+
+                        <h4>2. Check for Response:</h4>
+                        <p>Tap the person's shoulder and shout loudly, "Are you O.K.?"</p>
+                        <p>If no response, call for help immediately (shout for someone to call for help - and get an AED if available). If alone, call emergency services yourself using speakerphone.</p>
+
+                        <h4>3. Check for Breathing:</h4>
+                        <p>Open the airway by tilting the head back and lifting the chin.</p>
+                        <p>Look, listen, and feel for normal breathing for no more than 10 seconds. Occasional gasps are NOT normal breathing.</p>
+
+                        <h4>4. If No Normal Breathing and Unresponsive, Start CPR:</h4>
+                        <p><strong>Chest Compressions:</strong></p>
+                        <ul>
+                            <li>Ensure the person is lying on their back on a firm surface.</li>
+                            <li>Kneel beside the person.</li>
+                            <li>Place the heel of one hand in the center of the chest, on the lower half of the breastbone.</li>
+                            <li>Place your other hand on top of the first hand and interlock your fingers, keeping them off the chest.</li>
+                            <li>Position yourself with your shoulders directly over your hands and keep your arms straight.</li>
+                            <li>Push down hard and fast, compressing the chest about 5-6 cm (2-2.4 inches).</li>
+                            <li>Allow the chest to fully recoil after each compression.</li>
+                            <li>Perform compressions at a rate of 100-120 per minute.</li>
+                        </ul>
+
+                        <p><strong>Rescue Breaths (If trained and willing):</strong></p>
+                        <ul>
+                            <li>After 30 compressions, open the airway again using the head-tilt, chin-lift.</li>
+                            <li>Pinch the soft part of the nose closed.</li>
+                            <li>Take a normal breath, seal your mouth over the person's mouth, and blow steadily for about 1 second, watching for the chest to rise.</li>
+                            <li>If the chest rises, give a second breath. If it doesn't rise, re-tilt the head and try again. Limit breaths to two attempts to minimize interruptions to compressions.</li>
+                        </ul>
+
+                        <p><strong>CPR Cycle:</strong></p>
+                        <ul>
+                            <li>Continue cycles of 30 chest compressions followed by 2 rescue breaths (30:2).</li>
+                        </ul>
+
+                        <p><strong>Hands-Only CPR:</strong></p>
+                        <ul>
+                            <li>If you are not trained in rescue breaths or are unwilling, provide continuous chest compressions at a rate of 100-120 per minute.</li>
+                        </ul>
+
+                        <p><strong>Continue CPR until:</strong></p>
+                        <ul>
+                            <li>Emergency medical services arrive and take over.</li>
+                            <li>The person shows signs of life (moves, breathes normally, coughs, etc.).</li>
+                            <li>An AED is available and ready to use.</li>
+                            <li>You are too exhausted to continue.</li>
+                        </ul>
+
+                        <p><strong>Important Considerations:</strong></p>
+                        <ul>
+                            <li>This is a brief guide and not a substitute for certified training.</li>
+                            <li>We recommend users take a full first aid and CPR course.</li>
+                            <li>Remember to call emergency services as the absolute first step after checking for response and breathing.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Burns</button>
+                    <div class="collapsible-content">
+                        <p>Burns are injuries to the skin caused by heat, chemicals, electricity, or radiation (like the sun). In a hiking environment, common causes can include campfires, stoves, hot liquids, or prolonged sun exposure.</p>
+                        <p><strong>Initial Treatment for Burns:</strong></p>
+                        <ul>
+                            <li><strong>Stop the Burning Process:</strong> Remove the person from the source of the burn. If clothing is on fire, stop, drop, and roll, or smother the flames with a blanket or jacket.</li>
+                            <li><strong>Cool the Burn:</strong> Immediately cool the burned area with cool (not ice-cold) running water for at least 10-20 minutes. If running water isn't available, use cool compresses or immerse the area in cool water. Do NOT use ice, butter, grease, or powders, as these can worsen the injury.</li>
+                            <li><strong>Remove Tight Items:</strong> Gently remove any jewelry, belts, or tight clothing from around the burned area before swelling occurs, unless they are stuck to the skin.</li>
+                            <li><strong>Cover the Burn:</strong> Loosely cover the cooled burn with a clean, non-stick dressing or sterile bandage. For minor burns, cling film can be used, but do not wrap it tightly. This helps protect the burn from infection and reduces pain by keeping air off the injured area.</li>
+                            <li><strong>Manage Pain:</strong> Over-the-counter pain relievers like ibuprofen or paracetamol can help ease pain and reduce inflammation.</li>
+                            <li><strong>Seek Medical Attention:</strong>
+                                <ul>
+                                    <li>For minor burns (redness, pain, possibly small blisters - affecting only the top layer or slightly deeper), keep the area clean and covered. Monitor for signs of infection (increased redness, swelling, pus, fever).</li>
+                                    <li>For more severe burns (larger blisters, deeper damage, leathery appearance, or burns to the face, hands, feet, genitals, or major joints), or if you are unsure of the severity, seek immediate medical attention. Evacuate the person if necessary and possible, or call for emergency help.</li>
+                                    <li>Chemical or electrical burns always require immediate medical attention. For chemical burns, flush the area with large amounts of water while carefully removing contaminated clothing.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <p><strong>Do NOT break blisters.</strong> They provide a natural barrier against infection. If a blister breaks on its own, gently clean the area and apply a clean dressing.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Snake Bites</button>
+                    <div class="collapsible-content">
+                        <p>While uncommon, encounters with snakes are possible. If bitten:</p>
+                        <ul>
+                            <li><strong>Stay Calm:</strong> Panic increases venom spread. Reassure the person.</li>
+                            <li><strong>Limit Movement:</strong> Keep the bitten limb still and below heart level if possible.</li>
+                            <li><strong>Remove Constricting Items:</strong> Rings, watches, or tight clothing on the affected limb should be removed before swelling occurs.</li>
+                            <li><strong>Clean the Bite Area:</strong> Gently clean the wound with water or antiseptic wipe if available.</li>
+                            <li><strong>DO NOT:</strong> Cut the wound, suck out venom, apply a tourniquet, apply ice or heat, or give the person alcohol. These actions are harmful.</li>
+                            <li><strong>Seek Immediate Medical Help:</strong> Use your provided two-way radio or phone to contact Queen Rose Base Camp or emergency services immediately. Describe the snake if possible (size, colour, markings) without trying to catch or kill it, as identification is less critical than rapid medical assessment and treatment.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Heatstroke</button>
+                    <div class="collapsible-content">
+                        <h4>Heat Exhaustion: (Symptoms: heavy sweating, paleness, muscle cramps, tiredness, weakness, dizziness, headache, nausea, fainting)</h4>
+                        <p><strong>Treatment:</strong> Move the person to a cool, shaded area. Have them lie down with their feet slightly raised. Loosen tight clothing. Give sips of cool water. Fan the person. If symptoms worsen or don't improve within an hour, or if vomiting occurs, seek immediate medical help (could be progressing to heatstroke).</p>
+                        
+                        <h4>Heatstroke: (Symptoms: high body temperature, red/hot/dry or moist skin, confusion, throbbing headache, dizziness, nausea, rapid strong pulse, possibly unconsciousness - this is a medical emergency!)</h4>
+                        <p><strong>Treatment:</strong> Call for emergency help immediately. Move the person to the coolest possible area. Cool them rapidly using any means available (soak clothing with water, apply wet cloths, fan them). Do NOT give fluids if they are unconscious or confused.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Hypothermia</button>
+                    <div class="collapsible-content">
+                        <p>(Danger in wet or cold conditions. Symptoms: shivering, confusion, drowsiness, slurred speech, stumbling, loss of coordination. Severe hypothermia: shivering stops, weak pulse, slow breathing.)</p>
+                        <p><strong>Treatment:</strong> Move the person to a warm, dry place. Gently remove wet clothing and replace with dry layers. Wrap them in blankets (including an emergency foil blanket). Offer warm, non-caffeinated, non-alcoholic drinks. Share body heat if necessary. For severe hypothermia, seek immediate medical help.</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Dehydration</button>
+                    <div class="collapsible-content">
+                        <p>Dehydration is a state where your body loses more fluid than you take in, disrupting essential functions. When hiking, increased physical exertion, especially in warm or dry conditions or at altitude, leads to increased sweating and fluid loss, making hikers particularly susceptible. Ignoring the signs of dehydration can quickly turn an enjoyable hike into a serious situation.</p>
+                        
+                        <h4>Recognizing Dehydration:</h4>
+                        <p>Early recognition is key. Be aware of the following symptoms:</p>
+                        <ul>
+                            <li>Increased thirst and dry mouth</li>
+                            <li>Fatigue or tiredness</li>
+                            <li>Headache</li>
+                            <li>Dizziness or lightheadedness</li>
+                            <li>Dark-colored, strong-smelling urine, or decreased urination</li>
+                            <li>Muscle cramps</li>
+                        </ul>
+                        
+                        <p>As dehydration worsens, symptoms can become more severe and may include:</p>
+                        <ul>
+                            <li>Nausea</li>
+                            <li>Confusion or disorientation</li>
+                            <li>Rapid heart rate and breathing</li>
+                            <li>Sunken eyes</li>
+                            <li>Lack of sweating</li>
+                            <li>Pale or dry skin</li>
+                            <li>In severe cases, inability to keep fluids down, or loss of consciousness. Severe dehydration is a medical emergency.</li>
+                        </ul>
+                        
+                        <h4>Trailside Remedy:</h4>
+                        <p>If you or a hiking companion show signs of dehydration, stop immediately.</p>
+                        <ul>
+                            <li><strong>Find Shade and Rest:</strong> Move to a cool, shaded area and cease all physical activity to prevent further fluid loss through sweating.</li>
+                            <li><strong>Rehydrate:</strong> Sip water slowly. Avoid chugging large amounts, which can lead to nausea. If available, use an electrolyte solution or add an electrolyte tablet or powder to your water. These help replenish vital salts lost through sweat, aiding in faster rehydration.</li>
+                            <li><strong>Consume Salty Snacks:</strong> Eating salty snacks can also help replace lost electrolytes.</li>
+                            <li><strong>Monitor Symptoms:</strong> Rest and continue to rehydrate. Do not resume hiking until symptoms significantly improve.</li>
+                            <li><strong>Severe Dehydration:</strong> If symptoms are severe (confusion, inability to drink, unconsciousness), this is a medical emergency. Seek immediate professional medical help. If in a remote location, be prepared to call for emergency assistance if possible, and administer first aid to the best of your ability while awaiting help.</li>
+                        </ul>
+                        
+                        <h4>Prevention is the Best Medicine:</h4>
+                        <ul>
+                            <li><strong>Hydrate Before You Hike:</strong> Drink plenty of water in the hours leading up to your hike.</li>
+                            <li><strong>Drink Regularly During the Hike:</strong> Don't wait until you feel thirsty. Sip water consistently, especially during strenuous parts of the trail or in warm weather. Aim for about 0.5 to 1 liter of water per hour of hiking, adjusting based on conditions and exertion level.</li>
+                            <li><strong>Use Electrolytes:</strong> For longer or more challenging hikes, incorporate electrolyte drinks or snacks.</li>
+                            <li><strong>Monitor Urine Color:</strong> Pale yellow urine indicates good hydration; dark urine means you need to drink more.</li>
+                            <li><strong>Avoid Dehydrating Beverages:</strong> Limit caffeine and alcohol before and during your hike.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <button class="collapsible-button">Using Your First Aid Kit</button>
+                    <div class="collapsible-content">
+                        <ul>
+                            <li>Familiarize yourself with the contents of your first aid kit before your hike.</li>
+                            <li>Know how to use the items inside.</li>
+                            <li>Keep your kit easily accessible in your backpack.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Queen Rose Hiking Trail App</p>
+        <p id="version-indicator">Version: Loading...</p>
+    </footer>
+
+    <script src="js/vendor/leaflet.js"></script>
+    <!-- GitHub-specific KML path fix script - must be loaded before other KML-dependent scripts -->
+    <script src="kml_path_fix.js"></script>
+    <script src="js/vendor/leaflet-gpx.min.js"></script>
+    <script src="js/vendor/togeojson.umd.js"></script>
+    <script src="js/vendor/dexie.js"></script>
+    <script src="js/vendor/leaflet.dexie.min.js"></script>
+    <script src="js/vendor/litepicker.min.js"></script>
+    <script src="js/vendor/splide.min.js"></script>
+    <script src="js/trails.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/map_layer_controls.js"></script>
+    <script src="js/track_up_mode.js"></script>
+    <script src="js/custom_location_indicator.js"></script>
+    <script src="js/gps_tracking.js"></script>
+    <script src="js/waypoint_logic.js"></script>
+    <script src="js/kml_management.js"></script>
+    <script src="js/booking.js"></script>
+    <script src="js/weather.js"></script>
+    <script src="js/weather_offline.js"></script>
+    <script src="js/reviews.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/custom-kml-functions.js"></script>
+    <script src="js/first-aid.js"></script>
+
+<footer-btn></footer-btn>
+<script>
+    // Define custom element only if not already defined
+    if (!customElements.get('footer-btn')) {
+        class FooterBtn extends HTMLElement {
+            constructor() {
+                super();
+                // Create Shadow DOM
+                const shadow = this.attachShadow({ mode: 'open' });
+                // Create component HTML structure
+                const wrapper = document.createElement('div');
+                wrapper.setAttribute('class', 'wrapper');
+            // 添加一些内容到组件中
+            wrapper.innerHTML = `
+                <div class="page-footer" style="left: 16px; right: auto;">
+                    <div class="tooltip-dialog">Not an official Manus website nor endorsed by Manus. Content may contain inaccuracies; double-check before use. Do not submit passwords, credit cards, or personal information.</div>
+                    <div class="footer-close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <g clip-path="url(#clip0_5850_97234)">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.733398 8.00104C0.733398 3.98777 3.9868 0.734375 8.00006 0.734375C12.0133 0.734375 15.2667 3.98777 15.2667 8.00104C15.2667 12.0143 12.0133 15.2677 8.00006 15.2677C3.9868 15.2677 0.733398 12.0143 0.733398 8.00104Z" fill="white"/>
+                        <path d="M1.2334 8.00104C1.2334 4.26391 4.26294 1.23438 8.00006 1.23438C11.7372 1.23438 14.7667 4.26391 14.7667 8.00104C14.7667 11.7382 11.7372 14.7677 8.00006 14.7677C4.26294 14.7677 1.2334 11.7382 1.2334 8.00104Z" stroke="black" stroke-opacity="0.14" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M5.57576 5.57613C5.81007 5.34181 6.18997 5.34181 6.42429 5.57613L8.00002 7.15186L9.57576 5.57613C9.81007 5.34181 10.19 5.34181 10.4243 5.57613C10.6586 5.81044 10.6586 6.19034 10.4243 6.42465L8.84855 8.00039L10.4243 9.57613C10.6586 9.81044 10.6586 10.1903 10.4243 10.4247C10.19 10.659 9.81007 10.659 9.57576 10.4247L8.00002 8.84892L6.42429 10.4247C6.18997 10.659 5.81007 10.659 5.57576 10.4247C5.34145 10.1903 5.34145 9.81044 5.57576 9.57613L7.1515 8.00039L5.57576 6.42465C5.34145 6.19034 5.34145 5.81044 5.57576 5.57613Z" fill="#858481"/>
+                        </g>
+                        <defs>
+                        <clipPath id="clip0_5850_97234">
+                        <rect width="16" height="16" fill="white"/>
+                        </clipPath>
+                        </defs>
+                        </svg>
+                    </div>
+                    <div class="footer-bg">
+                        <div class="tooltip-box">
+                            <div class="tooltip-desc">This user-generated website was created with AI. Use with caution.</div>
+                            <span
+                                class="tooltip-icon"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                    <g clip-path="url(#clip0_4345_83044)">
+                                        <path
+                                            d="M6 8V6M6 4H6.005M11 6C11 8.76142 8.76142 11 6 11C3.23858 11 1 8.76142 1 6C1 3.23858 3.23858 1 6 1C8.76142 1 11 3.23858 11 6Z"
+                                            stroke="#858481"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_4345_83044">
+                                            <rect width="12" height="12" fill="white" />
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                            </span>
+                <div class="page-footer">
+                    <!-- Made with Manus logo removed -->
+                </div>6.34906 9.40136 6.26768 9.48274C5.94625 9.80417 5.78554 10.1256 5.78554 10.2863C5.78554 10.447 5.40745 9.53393 5.32437 9.44837C5.07703 9.19366 5.083 8.78667 5.33771 8.53933C5.69527 8.19212 6.28003 7.96925 6.90502 7.89918C7.55323 7.82651 8.3219 7.9075 9.09971 8.25205C10.0075 8.65415 10.4937 9.50199 10.6773 10.2768C10.7705 10.6701 10.7943 11.0743 10.7466 11.4426C10.7002 11.8002 10.5781 12.1826 10.3242 12.4736C9.79525 13.0799 9.01508 13.0116 8.593 12.9221C8.35518 12.8716 8.14542 12.7975 7.99786 12.738C7.92303 12.7079 7.86158 12.6804 7.81747 12.6597C7.79535 12.6493 7.77743 12.6406 7.7642 12.6341C7.75757 12.6308 7.75211 12.628 7.74786 12.6259L7.7424 12.6231L7.74037 12.622L7.73915 12.6214C7.73915 12.6214 7.7388 12.6212 8.03568 12.051L7.7388 12.6212C7.42389 12.4573 7.30152 12.069 7.46548 11.7541C7.62912 11.4398 8.01612 11.3173 8.3307 11.4798M8.3307 11.4798L8.33145 11.4802L8.3307 11.4798ZM8.3307 11.4798L8.33531 11.4822C8.34052 11.4847 8.3498 11.4893 8.36271 11.4953C8.38864 11.5075 8.42852 11.5254 8.4788 11.5457C8.58146 11.5871 8.71705 11.6341 8.85982 11.6644C9.19892 11.7363 9.32081 11.668 9.3554 11.6284C9.38325 11.5965 9.44396 11.4899 9.47154 11.2773C9.49771 11.0755 9.48663 10.8281 9.42625 10.5733C9.30267 10.0519 9.00685 9.61712 8.57899 9.42759C8.02117 9.1805 7.48301 9.12815 7.04826 9.17689"
+                                    fill="white"
+                                />
+                                <path
+                                    fill-rule="evenodd"
+                                    clip-rule="evenodd"
+                                    d="M2.79812 2.53348C2.64176 2.85224 2.7734 3.2374 3.09216 3.39376C3.55 3.61834 3.94731 3.83979 4.34068 4.28331C4.57627 4.54892 4.98258 4.57326 5.2482 4.33767C5.51381 4.10208 5.53815 3.69577 5.30256 3.43016C4.742 2.79815 4.16499 2.48794 3.65839 2.23944C3.33963 2.08308 2.95448 2.21473 2.79812 2.53348Z"
+                                    fill="white"
+                                />
+                                <path
+                                    fill-rule="evenodd"
+                                    clip-rule="evenodd"
+                                    d="M6.27275 0.662519C5.92831 0.748629 5.71889 1.09766 5.805 1.4421C5.86516 1.68274 5.92127 1.8885 5.97263 2.07686C6.07093 2.43738 6.15185 2.73415 6.21054 3.08969C6.26837 3.43999 6.59923 3.67708 6.94952 3.61926C7.29982 3.56143 7.53692 3.23058 7.47909 2.88028C7.40972 2.46006 7.3017 2.06246 7.19328 1.66338C7.14526 1.48666 7.09717 1.30966 7.05233 1.13027C6.96622 0.785827 6.61719 0.57641 6.27275 0.662519Z"
+                                    fill="white"
+                                />
+                                <path
+                                    d="M8.99979 3.21456C9.16051 2.57171 9.32122 2.08956 9.61377 1.60742"
+                                    stroke="white"
+                                    stroke-width="1.28571"
+                                    stroke-miterlimit="10"
+                                    stroke-linecap="round"
+                                />
+                                <path
+                                    fill-rule="evenodd"
+                                    clip-rule="evenodd"
+                                    d="M11.3613 6.26832C12.6366 6.52316 12.6368 6.52221 12.6368 6.52221L12.637 6.52126L12.6373 6.51931L12.6381 6.51527L12.6396 6.50658C12.6407 6.50054 12.6418 6.49395 12.6429 6.48687C12.6452 6.47271 12.6476 6.45641 12.65 6.43816C12.6548 6.40191 12.6596 6.35662 12.6628 6.30419C12.6689 6.20315 12.6702 6.05635 12.6443 5.88608C12.5954 5.56354 12.4075 4.95215 11.7455 4.59774L11.6146 4.52762L11.4715 4.48801L11.1424 5.7144C11.4358 5.8715 11.3613 6.26832 11.3613 6.26832ZM11.1573 7.07742L11.3613 6.26832L12.6366 6.52316L12.6296 6.56049L12.4237 7.37732C12.3841 7.57807 12.3789 7.69285 12.381 7.75349C12.3828 7.80284 12.3892 7.81904 12.3924 7.82698L12.3927 7.8279C12.4008 7.84841 12.4216 7.89289 12.4977 8.00832C12.5287 8.05537 12.561 8.10252 12.6021 8.1626C12.613 8.1785 12.6245 8.19531 12.6367 8.21327C12.6919 8.29416 12.7565 8.38953 12.825 8.49621C13.2527 9.16281 13.2947 9.80259 13.2925 10.2126C13.2924 10.2186 13.2924 10.2246 13.2923 10.2305C13.3435 10.2481 13.3978 10.2658 13.4555 10.2841C13.4745 10.2902 13.4997 10.2982 13.5262 10.3065C13.5634 10.3183 13.6031 10.3308 13.6314 10.3399C13.6872 10.3577 13.7584 10.381 13.8272 10.4067C13.8751 10.4245 13.9211 10.4423 13.9644 10.4603C14.0059 10.4775 14.0566 10.4995 14.1099 10.5264C14.1513 10.5473 14.2186 10.5831 14.2948 10.6359L14.9647 10.9242L14.955 11.7823C14.9493 12.2868 14.7463 12.8187 14.6023 13.148C14.4436 13.5111 14.2339 13.8983 14.0408 14.1556C13.7712 14.515 13.4657 14.8945 13.0981 15.1372C12.8815 15.2802 12.6198 15.394 12.3111 15.4313C12.0361 15.4645 11.7981 15.4277 11.6232 15.3851L11.5717 15.3745C11.5199 15.3639 11.4456 15.3486 11.3553 15.3298C11.1748 15.2922 10.9287 15.2404 10.6678 15.1837C10.1867 15.0793 9.53471 14.9331 9.22715 14.8311L9.20492 14.8237L9.18296 14.8155C9.04655 14.7649 8.81591 14.7081 8.43387 14.621C8.41077 14.6157 8.38722 14.6103 8.36328 14.6049C8.03371 14.5299 7.6281 14.4376 7.24401 14.3212C6.8462 14.2008 6.35418 14.0216 5.9364 13.7296C5.4979 13.4232 4.99936 12.8829 4.9716 12.0723C4.96744 11.951 4.97023 11.8337 4.97774 11.7224C4.78027 11.5084 4.61454 11.2286 4.53078 10.8703C4.44918 10.5212 4.49431 10.2118 4.55156 9.99459C4.60897 9.7768 4.69617 9.58643 4.76904 9.44413C4.79364 9.3961 4.81915 9.34874 4.8446 9.30298C4.60356 9.22692 4.3313 9.13294 4.06631 9.01999C3.72023 8.87246 3.22918 8.62908 2.86258 8.2362C2.66514 8.0246 2.4584 7.72132 2.37481 7.3248C2.28733 6.90985 2.36002 6.51171 2.53036 6.1708C2.94502 5.34093 3.73706 5.04773 4.44152 5.02237C5.07762 4.99946 5.75449 5.17745 6.36097 5.39016C6.91355 5.58397 7.70443 5.94444 8.3763 6.25842C8.5976 5.89554 8.88932 5.48549 9.16548 5.15432L9.22034 5.08854L9.28382 5.03075C9.75896 4.59828 10.2927 4.45288 10.6994 4.42169C10.8988 4.4064 11.0705 4.41781 11.1989 4.43448C11.2638 4.44291 11.3198 4.45295 11.3652 4.46245C11.388 4.46721 11.4083 4.47188 11.426 4.4762C11.4349 4.47837 11.4431 4.48045 11.4507 4.48243L11.4616 4.48531L11.4666 4.48668L11.4691 4.48735L11.4703 4.48768C11.4703 4.48768 11.4715 4.48801 11.1424 5.7144C11.1424 5.7144 10.6292 5.57232 10.188 5.96175C10.1836 5.96567 10.1792 5.96965 10.1747 5.97368C10.161 5.99009 10.1473 6.0067 10.1336 6.02351C10.1139 6.04768 10.0941 6.07224 10.0743 6.09711C10.0685 6.10441 10.0627 6.11174 10.0569 6.1191C9.61666 6.67768 9.64277 6.91103 8.83914 7.87543C8.83914 7.87543 8.4205 7.68157 8.1701 7.56386C7.9983 7.48311 7.81669 7.39774 7.63164 7.31169C7.03464 7.03411 6.40173 6.74946 5.94628 6.58972C4.82494 6.19643 3.99821 6.14651 3.69645 6.75042C3.29839 7.54707 4.9148 8.00866 5.72705 8.24061C5.8981 8.28945 6.03349 8.32811 6.10689 8.35758C6.52348 8.52479 6.55255 8.86031 6.42848 9.16103C6.35609 9.33651 6.31482 9.43541 6.10706 9.64317C5.78563 9.9646 5.73292 10.3452 5.7943 10.6078C5.82503 10.7392 5.88582 10.8348 5.95809 10.9044C6.15197 11.0909 6.42842 11.0897 6.42842 11.0897C6.42842 11.0897 6.25016 11.5453 6.26759 12.0541C6.27143 12.1661 6.30155 12.268 6.35346 12.3612C6.66163 12.9145 7.73774 13.1596 8.64189 13.3655C9.02162 13.452 9.37102 13.5316 9.62046 13.6242C10.0676 13.7726 11.8925 14.1433 11.8925 14.1433C12.2292 14.2317 12.438 14.1247 12.9919 13.3864C13.2219 13.0797 13.653 12.2123 13.6583 11.7435C13.5884 11.7134 13.5835 11.7029 13.5786 11.6924C13.5718 11.6779 13.565 11.6633 13.3882 11.5974C13.329 11.5754 13.2499 11.5504 13.1593 11.5218C12.7822 11.4029 12.2071 11.2215 12.0534 10.929C11.9788 10.787 11.9846 10.5964 11.9915 10.3736C12.0022 10.0271 12.0153 9.60261 11.732 9.16115C11.6624 9.05276 11.5957 8.95523 11.5333 8.864C11.1781 8.34469 10.9626 8.0296 11.1573 7.07742ZM5.21736 8.64574C5.21818 8.64341 5.21787 8.64394 5.21684 8.64717L5.21736 8.64574ZM13.2859 10.6214C13.2859 10.6214 13.2859 10.6164 13.2849 10.6077C13.2852 10.6173 13.2859 10.6214 13.2859 10.6214Z"
+                                    fill="white"
+                                />
+                            </svg>
+                        </span>
+                        <div class="title">Made with Manus</div>
+                        <div class="create-title">Create my website</div>
+                    </a>
+                <                <div class="page-footer-mobile">
+                    <!-- Made with Manus logo removed -->
+                </div>C2.64176 2.85224 2.7734 3.2374 3.09216 3.39376C3.55 3.61834 3.94731 3.83979 4.34068 4.28331C4.57627 4.54892 4.98258 4.57326 5.2482 4.33767C5.51381 4.10208 5.53815 3.69577 5.30256 3.43016C4.742 2.79815 4.16499 2.48794 3.65839 2.23944C3.33963 2.08308 2.95448 2.21473 2.79812 2.53348Z"
+                                fill="white"
+                            />
+                            <path
+                                fill-rule="evenodd"
+                                clip-rule="evenodd"
+                                d="M6.27275 0.662519C5.92831 0.748629 5.71889 1.09766 5.805 1.4421C5.86516 1.68274 5.92127 1.8885 5.97263 2.07686C6.07093 2.43738 6.15185 2.73415 6.21054 3.08969C6.26837 3.43999 6.59923 3.67708 6.94952 3.61926C7.29982 3.56143 7.53692 3.23058 7.47909 2.88028C7.40972 2.46006 7.3017 2.06246 7.19328 1.66338C7.14526 1.48666 7.09717 1.30966 7.05233 1.13027C6.96622 0.785827 6.61719 0.57641 6.27275 0.662519Z"
+                                fill="white"
+                            />
+                            <path
+                                d="M8.99979 3.21456C9.16051 2.57171 9.32122 2.08956 9.61377 1.60742"
+                                stroke="white"
+                                stroke-width="1.28571"
+                                stroke-miterlimit="10"
+                                stroke-linecap="round"
+                            />
+                            <path
+                                fill-rule="evenodd"
+                                clip-rule="evenodd"
+                                d="M11.3613 6.26832C12.6366 6.52316 12.6368 6.52221 12.6368 6.52221L12.637 6.52126L12.6373 6.51931L12.6381 6.51527L12.6396 6.50658C12.6407 6.50054 12.6418 6.49395 12.6429 6.48687C12.6452 6.47271 12.6476 6.45641 12.65 6.43816C12.6548 6.40191 12.6596 6.35662 12.6628 6.30419C12.6689 6.20315 12.6702 6.05635 12.6443 5.88608C12.5954 5.56354 12.4075 4.95215 11.7455 4.59774L11.6146 4.52762L11.4715 4.48801L11.1424 5.7144C11.4358 5.8715 11.3613 6.26832 11.3613 6.26832ZM11.1573 7.07742L11.3613 6.26832L12.6366 6.52316L12.6296 6.56049L12.4237 7.37732C12.3841 7.57807 12.3789 7.69285 12.381 7.75349C12.3828 7.80284 12.3892 7.81904 12.3924 7.82698L12.3927 7.8279C12.4008 7.84841 12.4216 7.89289 12.4977 8.00832C12.5287 8.05537 12.561 8.10252 12.6021 8.1626C12.613 8.1785 12.6245 8.19531 12.6367 8.21327C12.6919 8.29416 12.7565 8.38953 12.825 8.49621C13.2527 9.16281 13.2947 9.80259 13.2925 10.2126C13.2924 10.2186 13.2924 10.2246 13.2923 10.2305C13.3435 10.2481 13.3978 10.2658 13.4555 10.2841C13.4745 10.2902 13.4997 10.2982 13.5262 10.3065C13.5634 10.3183 13.6031 10.3308 13.6314 10.3399C13.6872 10.3577 13.7584 10.381 13.8272 10.4067C13.8751 10.4245 13.9211 10.4423 13.9644 10.4603C14.0059 10.4775 14.0566 10.4995 14.1099 10.5264C14.1513 10.5473 14.2186 10.5831 14.2948 10.6359L14.9647 10.9242L14.955 11.7823C14.9493 12.2868 14.7463 12.8187 14.6023 13.148C14.4436 13.5111 14.2339 13.8983 14.0408 14.1556C13.7712 14.515 13.4657 14.8945 13.0981 15.1372C12.8815 15.2802 12.6198 15.394 12.3111 15.4313C12.0361 15.4645 11.7981 15.4277 11.6232 15.3851L11.5717 15.3745C11.5199 15.3639 11.4456 15.3486 11.3553 15.3298C11.1748 15.2922 10.9287 15.2404 10.6678 15.1837C10.1867 15.0793 9.53471 14.9331 9.22715 14.8311L9.20492 14.8237L9.18296 14.8155C9.04655 14.7649 8.81591 14.7081 8.43387 14.621C8.41077 14.6157 8.38722 14.6103 8.36328 14.6049C8.03371 14.5299 7.6281 14.4376 7.24401 14.3212C6.8462 14.2008 6.35418 14.0216 5.9364 13.7296C5.4979 13.4232 4.99936 12.8829 4.9716 12.0723C4.96744 11.951 4.97023 11.8337 4.97774 11.7224C4.78027 11.5084 4.61454 11.2286 4.53078 10.8703C4.44918 10.5212 4.49431 10.2118 4.55156 9.99459C4.60897 9.7768 4.69617 9.58643 4.76904 9.44413C4.79364 9.3961 4.81915 9.34874 4.8446 9.30298C4.60356 9.22692 4.3313 9.13294 4.06631 9.01999C3.72023 8.87246 3.22918 8.62908 2.86258 8.2362C2.66514 8.0246 2.4584 7.72132 2.37481 7.3248C2.28733 6.90985 2.36002 6.51171 2.53036 6.1708C2.94502 5.34093 3.73706 5.04773 4.44152 5.02237C5.07762 4.99946 5.75449 5.17745 6.36097 5.39016C6.91355 5.58397 7.70443 5.94444 8.3763 6.25842C8.5976 5.89554 8.88932 5.48549 9.16548 5.15432L9.22034 5.08854L9.28382 5.03075C9.75896 4.59828 10.2927 4.45288 10.6994 4.42169C10.8988 4.4064 11.0705 4.41781 11.1989 4.43448C11.2638 4.44291 11.3198 4.45295 11.3652 4.46245C11.388 4.46721 11.4083 4.47188 11.426 4.4762C11.4349 4.47837 11.4431 4.48045 11.4507 4.48243L11.4616 4.48531L11.4666 4.48668L11.4691 4.48735L11.4703 4.48768C11.4703 4.48768 11.4715 4.48801 11.1424 5.7144C11.1424 5.7144 10.6292 5.57232 10.188 5.96175C10.1836 5.96567 10.1792 5.96965 10.1747 5.97368C10.161 5.99009 10.1473 6.0067 10.1336 6.02351C10.1139 6.04768 10.0941 6.07224 10.0743 6.09711C10.0685 6.10441 10.0627 6.11174 10.0569 6.1191C9.61666 6.67768 9.64277 6.91103 8.83914 7.87543C8.83914 7.87543 8.4205 7.68157 8.1701 7.56386C7.9983 7.48311 7.81669 7.39774 7.63164 7.31169C7.03464 7.03411 6.40173 6.74946 5.94628 6.58972C4.82494 6.19643 3.99821 6.14651 3.69645 6.75042C3.29839 7.54707 4.9148 8.00866 5.72705 8.24061C5.8981 8.28945 6.03349 8.32811 6.10689 8.35758C6.52348 8.52479 6.55255 8.86031 6.42848 9.16103C6.35609 9.33651 6.31482 9.43541 6.10706 9.64317C5.78563 9.9646 5.73292 10.3452 5.7943 10.6078C5.82503 10.7392 5.88582 10.8348 5.95809 10.9044C6.15197 11.0909 6.42842 11.0897 6.42842 11.0897C6.42842 11.0897 6.25016 11.5453 6.26759 12.0541C6.27143 12.1661 6.30155 12.268 6.35346 12.3612C6.66163 12.9145 7.73774 13.1596 8.64189 13.3655C9.02162 13.452 9.37102 13.5316 9.62046 13.6242C10.0676 13.7726 11.8925 14.1433 11.8925 14.1433C12.2292 14.2317 12.438 14.1247 12.9919 13.3864C13.2219 13.0797 13.653 12.2123 13.6583 11.7435C13.5884 11.7134 13.5835 11.7029 13.5786 11.6924C13.5718 11.6779 13.565 11.6633 13.3882 11.5974C13.329 11.5754 13.2499 11.5504 13.1593 11.5218C12.7822 11.4029 12.2071 11.2215 12.0534 10.929C11.9788 10.787 11.9846 10.5964 11.9915 10.3736C12.0022 10.0271 12.0153 9.60261 11.732 9.16115C11.6624 9.05276 11.5957 8.95523 11.5333 8.864C11.1781 8.34469 10.9626 8.0296 11.1573 7.07742ZM5.21736 8.64574C5.21818 8.64341 5.21787 8.64394 5.21684 8.64717L5.21736 8.64574ZM13.2859 10.6214C13.2859 10.6214 13.2859 10.6164 13.2849 10.6077C13.2852 10.6173 13.2859 10.6214 13.2859 10.6214Z"
+                                fill="white"
+                            />
+                        </svg>
+                        <!-- Manus branding completely removed -->
+                    <!-- Footer dialog and Manus branding completely removed -->
+                </div>
+            `;
+            // Create styles
+            const style = document.createElement('style');
+            style.textContent = `
+            @keyframes changeWidth {
+                0% {
+                    width: 150px;
+                    background-color: transparent;
+                }
+                100% {
+                    width: 574px;
+                    background-color: #fff;
+                }
+            }
+
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                border: unset;
+            }
+
+            * {
+                line-height: 1.2;
+                text-shadow: initial;
+                font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            }
+
+            a {
+                text-decoration: unset;
+            }
+
+            .page-footer-mobile {
+                z-index: 10000;
+                display: none;
+                position: absolute;
+                right: 16px;
+                bottom: 16px;
+            }
+
+            .page-footer {
+                z-index: 10000;
+                display: flex;
+                padding: 4px 4px 4px 12px;
+                align-items: center;
+                gap: 16px;
+                position: fixed;
+                right: 16px;
+                bottom: 16px;
+                border-radius: 24px;
+                border: 1px solid transparent;
+                background: transparent;
+                transition: 0.3s;
+            }
+
+            .footer-close-btn {
+                display: none;
+                z-index: 10002;
+                cursor: pointer;
+                position: absolute;
+                right: -3px;
+                top: -3px;
+            }
+
+            .footer-bg {
+                overflow: hidden;
+                position: absolute;
+                right: 0px;
+                bottom: 0px;
+                height: 38px;
+                width: 150px;
+                background-color: transparent;
+                border-radius: 24px;
+            }
+
+            .tooltip-box {
+                display: none;
+                transition: 0.3s;
+                z-index: 10001;
+                align-items: center;
+                gap: 1px;
+            }
+
+            .tooltip-desc {
+                color: #858481;
+                /* Label/Primary */
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 16px; /* 133.333% */
+            }
+
+            .footer-button {
+                z-index: 10001;
+                right: 16px;
+                bottom: 16px;
+                user-select: none;
+                cursor: pointer;
+                display: flex;
+                padding: 5px 10px;
+                align-items: center;
+                height: 30px;
+                gap: 2px;
+                transition: 0.3s;
+                border-radius: 14px;
+                border: 1px solid rgba(0, 0, 0, 0.06);
+                background: #1a1a19;
+                box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.06), 0px 8px 32px 0px rgba(0, 0, 0, 0.06);
+            }
+
+            .footer-logo {
+                width: 18px;
+                height: 18px;
+            }
+
+            .footer-button:hover .create-title {
+                opacity: 0.8;
+            }
+
+            .footer-button:hover .footer-logo {
+                opacity: 0.8;
+            }
+
+            .page-footer:hover .footer-close-btn {
+                display: block;
+            }
+
+            .page-footer:hover .create-title {
+                display: block;
+            }
+
+            .page-footer:hover .title {
+                display: none;
+            }
+
+            .page-footer:hover .footer-bg {
+                animation: changeWidth 0.3s ease-in-out forwards;
+                border: 1px solid rgba(0, 0, 0, 0.06);
+                background: #fff;
+                box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.06), 0px 8px 32px 0px rgba(0, 0, 0, 0.06);
+            }
+
+            .page-footer:hover .tooltip-box {
+                position: absolute;
+                text-wrap-mode: nowrap;
+                display: flex;
+                left: 10px;
+                top: 9px;
+            }
+
+            .tooltip-icon {
+                position: relative;
+                cursor: pointer;
+            }
+
+            .tooltip-dialog {
+                display: none;
+                position: absolute;
+                bottom: 154%;
+                left: -10%;
+                transform: translateX(-50%);
+                padding: 10px;
+                border-radius: 12px;
+                font-size: 12px;
+                line-height: 16px;
+                background-color: #171818;
+                color: #fff;
+                max-width: 280px;
+                width: max-content;
+            }
+
+            .title {
+                color: #fff;
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 16px;
+            }
+
+            .create-title {
+                display: none;
+                color: #fff;
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 400;
+            }
+
+            .footer-dialog {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: none;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .dialog-box {
+                display: flex;
+                width: 358px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                border-radius: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.04);
+                background: #fff;
+
+                /* menu/main */
+                box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.02), 0px 4px 32px 0px rgba(0, 0, 0, 0.16);
+                backdrop-filter: blur(40px);
+            }
+
+            .dialog-header {
+                display: flex;
+                padding: 16px 12px 8px 16px;
+                align-items: flex-start;
+                gap: 16px;
+                align-self: stretch;
+            }
+
+            .dialog-header-title {
+                flex: 1;
+                color: #34322d;
+                font-size: 18px;
+                font-style: normal;
+                font-weight: 600;
+            }
+
+            .dialog-body {
+                display: flex;
+                padding: 0px 16px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                align-self: stretch;
+                color: #535350;
+                font-size: 16px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 24px;
+            }
+
+            .dialog-footer {
+                display: flex;
+                padding: 16px;
+                align-items: flex-start;
+                gap: 12px;
+                align-self: stretch;
+            }
+
+            .dialog-footer-button-left {
+                display: flex;
+                width: 119px;
+                min-width: 114px;
+                min-height: 48px;
+                padding: 12px 24px;
+                justify-content: center;
+                align-items: center;
+                gap: 6px;
+                border-radius: 12px;
+                background: rgba(55, 53, 47, 0.06);
+                color: #34322d;
+                font-size: 16px;
+                font-style: normal;
+                font-weight: 600;
+            }
+
+            .dialog-footer-button-right {
+                display: flex;
+                min-width: 114px;
+                min-height: 48px;
+                padding: 12px 24px;
+                justify-content: center;
+                align-items: center;
+                gap: 6px;
+                flex: 1 0 0;
+                border-radius: 12px;
+                background: #1a1a19;
+                color: #fff;
+                font-size: 16px;
+                font-style: normal;
+                font-weight: 600;
+            }
+
+            @media (max-width: 600px) {
+                .page-footer {
+                    display: none;
+                }
+                .page-footer-mobile {
+                    display: block;
+                }
+                .footer-button {
+                    position: fixed
+                }
+            }
+            `;
+            // 将样式和内容添加到Shadow DOM
+            shadow.appendChild(style);
+            shadow.appendChild(wrapper);
+
+            // 在connectedCallback中设置事件监听器
+            this.setupEventListeners(shadow);
+        }
+        onclickEvent(shadow, domStr, fn) {
+            const clickDom = shadow.querySelector(domStr);
+            if (clickDom) {
+                clickDom.onclick = (event) => {
+                    fn(event, clickDom);
+                };
+            }
+        }
+        setupEventListeners(shadow) {
+            const changeDialogStyle = (displayStatus) => {
+                const dialog = shadow.querySelector('.footer-dialog');
+                if (dialog) {
+                    dialog.style.display = displayStatus;
+                }
+            };
+
+            const createSite = () => {
+                window.open('https://manus.im/invitation?from=space', '_blank');
+                changeDialogStyle('none');
+            };
+
+            this.onclickEvent(shadow, '.page-footer-mobile .dialog-footer-button-left', () => {
+                changeDialogStyle('none');
+            });
+
+            this.onclickEvent(shadow, '.page-footer-mobile .dialog-footer-button-right', () => {
+                createSite();
+            });
+
+            this.onclickEvent(shadow, '.page-footer-mobile .dialog-header-icon', () => {
+                changeDialogStyle('none');
+            });
+
+            this.onclickEvent(shadow, '.page-footer-mobile .footer-button', () => {
+                changeDialogStyle('flex');
+            });
+
+            this.onclickEvent(shadow, '.footer-close-btn', () => {
+                localStorage.setItem('embedClosed', 'true');
+                shadow.querySelector('.page-footer').style.display = 'none';
+                shadow.querySelector('.page-footer-mobile').style.display = 'none';
+            });
+
+            this.onclickEvent(shadow, '.page-footer-mobile .footer-dialog', (event, dialog) => {
+                if (event.target === dialog) {
+                    changeDialogStyle('none');
+                }
+            });
+
+            const tooltipIcon = shadow.querySelector('.tooltip-icon');
+            const tooltipDialog = shadow.querySelector('.tooltip-dialog');
+
+            tooltipIcon.addEventListener('mouseenter', function () {
+                tooltipDialog.style.display = 'block';
+            });
+
+            tooltipIcon.addEventListener('mouseleave', function () {
+                tooltipDialog.style.display = 'none';
+            });
+
+            if (localStorage.getItem('embedClosed')) {
+                shadow.querySelector('.page-footer').style.display = 'none';
+                shadow.querySelector('.page-footer-mobile').style.display = 'none';
+            }
+        }
+    }
+    // 注册自定义元素
+    if (!customElements.get('footer-btn')) {
+        customElements.define('footer-btn', FooterBtn);
+    }
+</script>
+<script
+			defer
+			data-domain="manus.space"
+			src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js">
+</script>
+<script>
+			window.plausible = window.plausible || function() { 
+				(window.plausible.q = window.plausible.q || []).push(arguments);
+			};
+			plausible('custom-pageview', {
+				props: { 
+					app: 'Queen Rose Hiking Trail App',
+					domain: window.location.host
+				}
+			});
+</script>
+<!-- Remove the duplicate script reference at the end of the file -->
+</body>
+</html>
