@@ -1,0 +1,80 @@
+/* Map Layer Toggle Styles */
+.map-layer-toggle {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    margin: 0 10px;
+    vertical-align: middle;
+}
+
+.map-layer-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.map-layer-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.map-layer-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .map-layer-toggle-slider {
+    background-color: #4CAF50;
+}
+
+input:focus + .map-layer-toggle-slider {
+    box-shadow: 0 0 1px #4CAF50;
+}
+
+input:checked + .map-layer-toggle-slider:before {
+    transform: translateX(26px);
+}
+
+.map-layer-toggle-label {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 5px;
+    font-size: 14px;
+}
+
+.map-download-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 0 5px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.map-download-button:hover {
+    background-color: #45a049;
+}
+
+.map-download-button:active {
+    background-color: #3e8e41;
+}
